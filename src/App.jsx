@@ -1,6 +1,7 @@
 import { useWeddingData } from './lib/useWeddingData.js'
 import { useGlobalReveal } from './lib/useGlobalReveal.js'
 import CustomCursor from './components/common/CustomCursor.jsx'
+import Opening from './components/site/Opening.jsx'
 import Hero from './components/site/Hero.jsx'
 import Story from './components/site/Story.jsx'
 import Ceremony from './components/site/Ceremony.jsx'
@@ -39,6 +40,8 @@ export default function App() {
       {visible('location') && <Location location={data.location} />}
 
       <Footer settings={data.settings} />
+
+      <Opening />
     </>
   )
 }

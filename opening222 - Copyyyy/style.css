@@ -1,0 +1,166 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    overflow: hidden;
+    background: #000;
+    font-family: Georgia, serif;
+}
+
+#scene {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    background: #050505;
+}
+
+#couple {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    opacity: 0;
+    color: white;
+    text-shadow:
+        0 0 10px gold,
+        0 0 25px gold,
+        0 0 50px gold;
+    text-align: center;
+    padding: 0 16px;
+}
+
+#couple h1 {
+    font-size: 80px;
+    font-weight: 300;
+    letter-spacing: 5px;
+}
+
+#couple p {
+    margin-top: 20px;
+    font-size: 24px;
+}
+
+.gate {
+    position: absolute;
+    top: 50%;
+    height: 100%;
+    width: auto;
+    z-index: 10;
+    transform: translateY(-50%);
+}
+
+.gateDesktop {
+    right: 50%;
+    transform: translateY(-50%);
+}
+
+.gateMobile {
+    right: 50%;
+    transform: translateY(-50%);
+}
+
+#rightGateD,
+#rightGateM {
+    left: 50%;
+    transform: translateY(-50%);
+}
+
+.gateMobile {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .gateDesktop {
+        display: none;
+    }
+
+    .gateMobile {
+        display: block;
+    }
+}
+
+.seal {
+    position: absolute;
+    left: 50%;
+    top: 45%;
+    width: 180px;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    z-index: 20;
+    filter: drop-shadow(0 0 30px rgb(125, 116, 66));
+}
+
+.sealMobile {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .sealDesktop {
+        display: none;
+    }
+
+    .sealMobile {
+        display: block;
+        width: 120px;
+        top: 52%;
+    }
+    
+}
+
+#lightBurst {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle,
+            rgba(255, 230, 150, .95) 0%,
+            rgba(255, 210, 100, .4) 25%,
+            transparent 70%);
+    opacity: 0;
+    z-index: 5;
+}
+
+
+@media (max-width: 768px) {
+    #couple h1 {
+        font-size: 42px;
+        letter-spacing: 3px;
+    }
+
+    #couple p {
+        margin-top: 12px;
+        font-size: 16px;
+    }
+
+}
+
+@media (max-width: 480px) {
+    #couple h1 {
+        font-size: 32px;
+        letter-spacing: 2px;
+    }
+
+    #couple p {
+        margin-top: 10px;
+        font-size: 14px;
+    }
+
+}
+
+@media (max-width: 360px) {
+    #couple h1 {
+        font-size: 26px;
+        letter-spacing: 1px;
+    }
+
+    #couple p {
+        font-size: 12px;
+    }
+
+}
