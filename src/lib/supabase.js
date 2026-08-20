@@ -22,6 +22,5 @@ export const supabase = createClientIfConfigured()
 export const isSupabaseConfigured = Boolean(supabase)
 
 export const CONTENT_TABLE = 'site_content'
-export const DUAS_TABLE = 'duas'
 export const BUCKET = 'sites'
 export const SITE_ID = 'default'

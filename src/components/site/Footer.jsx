@@ -2,7 +2,6 @@ import Reveal from '../common/Reveal.jsx'
 import { formatWeddingDate } from '../../lib/utils.js'
 
 export default function Footer({ settings }) {
-  const names = settings ? `${settings.groom} <span style="color: var(--gold);">&</span> ${settings.bride}` : 'Ahmad <span style="color: var(--gold);">&</span> Zara'
   const date = settings ? `${formatWeddingDate(settings.date)} ; ${settings.location || ''}` : 'Istanbul, Turkey'
 
   return (
@@ -50,7 +49,7 @@ export default function Footer({ settings }) {
         </Reveal>
 
         <Reveal delay={2} style={{ marginBottom: '1.5rem' }}>
-          <p id="footer-couple-names" style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 'clamp(1.5rem, 4vw, 2.5rem)', color: 'var(--ivory)', letterSpacing: '0.1em' }} dangerouslySetInnerHTML={{ __html: names }} />
+          <p id="footer-couple-names" style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 'clamp(1.5rem, 4vw, 2.5rem)', color: 'var(--ivory)', letterSpacing: '0.1em' }} >{settings ? settings.groom : 'Ahmad '}<span style={{ color: 'var(--gold)' }}>&</span>{settings ? settings.bride : ' Zara'}</p>
         </Reveal>
 
         <Reveal delay={3} style={{ marginBottom: '3rem' }}>
