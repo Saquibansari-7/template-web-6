@@ -11,53 +11,54 @@ VITE_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-anon-public-key
 VITE_ADMIN_PASSWORD=admin123   # optional
 ```
 
-## 2. Database tables
+## 2. Database tables + Storage + RLS (one script)
 
-Run this SQL in the Supabase SQL editor:
+Run this entire SQL in the Supabase **SQL Editor** (it creates the tables,
+the storage bucket, and the access policies all at once):
 
 ```sql
 -- Site content (single row, keyed by site_id)
-create table site_content (
+create table if not exists site_content (
   site_id text primary key,
   data jsonb not null,
   updated_at timestamptz default now()
 );
 
 -- Blessings / du'as submitted by guests
-create table duas (
+create table if not exists duas (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   text text not null,
   date text,
   created_at timestamptz default now()
 );
-```
 
-## 3. Storage bucket
+-- Storage bucket for gallery images
+insert into storage.buckets (id, name, public)
+values ('sites', 'sites', true)
+on conflict (id) do nothing;
 
-Create a public bucket named `sites` (used for gallery image uploads).
-
-## 4. Row Level Security (RLS)
-
-For a simple public wedding site, allow anonymous read/write on both tables and
-the bucket. (Tighten these for production as needed.)
-
-```sql
+-- Row Level Security: allow public read/write (simple wedding site)
 alter table site_content enable row level security;
-create policy "public read" on site_content for select using (true);
-create policy "public write" on site_content for insert with check (true);
-create policy "public update" on site_content for update using (true);
+create policy if not exists "site_content read"  on site_content for select using (true);
+create policy if not exists "site_content write" on site_content for insert with check (true);
+create policy if not exists "site_content update" on site_content for update using (true);
 
 alter table duas enable row level security;
-create policy "public read" on duas for select using (true);
-create policy "public insert" on duas for insert with check (true);
-create policy "public delete" on duas for delete using (true);
+create policy if not exists "duas read"   on duas for select using (true);
+create policy if not exists "duas insert" on duas for insert with check (true);
+create policy if not exists "duas delete" on duas for delete using (true);
+
+-- Storage policies for the "sites" bucket
+create policy if not exists "sites read"   on storage.objects for select using (bucket_id = 'sites');
+create policy if not exists "sites insert" on storage.objects for insert with check (bucket_id = 'sites');
+create policy if not exists "sites delete" on storage.objects for delete using (bucket_id = 'sites');
 ```
 
-Storage: in Storage → Policies, allow public read on `sites`, and insert for
-the anon role.
+> If you prefer, you can also create the `sites` bucket manually in
+> **Storage → New bucket** (name it `sites`, set it **Public**).
 
-## 5. Run
+## 3. Run
 
 ```
 npm install

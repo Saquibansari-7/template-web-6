@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { isLoggedIn, logout } from '../lib/data.js'
-import { useAdminData, useDuasState } from '../components/admin/useAdminData.js'
+import { useAdminData } from '../components/admin/useAdminData.js'
 import AdminShell from '../components/admin/AdminShell.jsx'
 import Login from '../components/admin/Login.jsx'
 import {
@@ -10,8 +10,7 @@ import {
 export default function AdminApp() {
   const [auth, setAuth] = useState(isLoggedIn())
   const [active, setActive] = useState('dashboard')
-  const { data, update } = useAdminData()
-  const { duas, remove } = useDuasState()
+  const { data, update, blessings, removeBlessing } = useAdminData()
 
   if (!auth) return <Login onSuccess={() => setAuth(true)} />
   if (!data) return <div className="login-container" />
@@ -27,7 +26,7 @@ export default function AdminApp() {
       case 'guidelines': return <Guidelines data={data} update={update} />
       case 'sections': return <Sections data={data} update={update} />
       case 'gallery': return <Gallery data={data} update={update} />
-      case 'duas': return <Duas duas={duas} remove={remove} />
+      case 'duas': return <Duas duas={blessings} remove={removeBlessing} />
       default: return <Dashboard data={data} />
     }
   }

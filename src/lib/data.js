@@ -1,10 +1,10 @@
-import { supabase, isSupabaseConfigured, CONTENT_TABLE, DUAS_TABLE, BUCKET, SITE_ID } from './supabase.js'
+import { supabase, isSupabaseConfigured, CONTENT_TABLE, BUCKET, SITE_ID } from './supabase.js'
 
 export { isSupabaseConfigured }
 import { DEFAULT_CONTENT } from './defaults.js'
 
 export const NOT_CONFIGURED_MESSAGE =
-  'Supabase is not configured. Add VITE_PUBLIC_SUPABASE_URL and VITE_PUBLIC_SUPABASE_PUBLISHABLE_KEY to your .env file.'
+  'Saving needs a Supabase connection. Please add your Supabase keys to the .env file to store changes.'
 
 function normalizeContent(raw) {
   const base = structuredClone(DEFAULT_CONTENT)
@@ -20,6 +20,7 @@ function normalizeContent(raw) {
     party: Array.isArray(raw.party) && raw.party.length ? raw.party : base.party,
     guidelines: Array.isArray(raw.guidelines) && raw.guidelines.length ? raw.guidelines : base.guidelines,
     gallery: Array.isArray(raw.gallery) && raw.gallery.length ? raw.gallery : base.gallery,
+    blessings: Array.isArray(raw.blessings) ? raw.blessings : base.blessings,
   }
 }
 
@@ -61,45 +62,30 @@ export async function resetContent() {
   return saveContent(structuredClone(DEFAULT_CONTENT))
 }
 
-/* ---------------- Du'as / Blessings ---------------- */
+/* ---------------- Blessings (stored inside site_content) ---------------- */
 
-export async function getDuas() {
-  if (!isSupabaseConfigured) return []
-  const { data, error } = await supabase
-    .from(DUAS_TABLE)
-    .select('*')
-    .order('created_at', { ascending: false })
-  if (error) {
-    console.error('[getDuas] Supabase error:', error)
+export async function getBlessings() {
+  try {
+    const content = await getContent()
+    return Array.isArray(content.blessings) ? content.blessings : []
+  } catch {
     return []
   }
-  return (data || []).map((d) => ({ id: d.id, name: d.name, text: d.text, date: d.date || '' }))
 }
 
-export async function addDua(dua) {
-  if (!isSupabaseConfigured) {
-    throw new Error(NOT_CONFIGURED_MESSAGE)
-  }
-  const { data, error } = await supabase
-    .from(DUAS_TABLE)
-    .insert([{ name: dua.name, text: dua.text, date: dua.date || new Date().toLocaleDateString() }])
-    .select()
-  if (error) {
-    console.error('[addDua] Supabase error:', error)
-    throw new Error(`Failed to save blessing: ${error.message}`)
-  }
-  return data?.[0] || dua
+export async function addBlessing(blessing) {
+  const content = await getContent()
+  const blessings = Array.isArray(content.blessings) ? content.blessings : []
+  const next = [blessing, ...blessings]
+  await saveContent({ ...content, blessings: next })
+  return blessing
 }
 
-export async function deleteDua(id) {
-  if (!isSupabaseConfigured) {
-    throw new Error(NOT_CONFIGURED_MESSAGE)
-  }
-  const { error } = await supabase.from(DUAS_TABLE).delete().eq('id', id)
-  if (error) {
-    console.error('[deleteDua] Supabase error:', error)
-    throw new Error(`Failed to delete blessing: ${error.message}`)
-  }
+export async function deleteBlessing(id) {
+  const content = await getContent()
+  const blessings = Array.isArray(content.blessings) ? content.blessings : []
+  const next = blessings.filter((b) => (b.id ?? `${b.name}-${b.text}`) !== id)
+  await saveContent({ ...content, blessings: next })
 }
 
 /* ---------------- Image upload ---------------- */
@@ -118,7 +104,7 @@ export async function uploadImage(file) {
   if (error) {
     const msg = error.message || String(error)
     if (msg.toLowerCase().includes('bucket')) {
-      throw new Error(`Storage bucket "${BUCKET}" not found. Create it in Supabase Storage.`)
+      throw new Error('Image upload needs a Supabase storage bucket named "sites". Create it in Supabase Storage.')
     }
     if (msg.includes('Unauthorized') || msg.toLowerCase().includes('jwt')) {
       throw new Error('Storage upload unauthorized. Check Storage RLS policies.')
@@ -140,15 +126,6 @@ export function subscribeToContent(onChange) {
       { event: '*', schema: 'public', table: CONTENT_TABLE, filter: `site_id=eq.${SITE_ID}` },
       () => onChange()
     )
-    .subscribe()
-  return () => supabase.removeChannel(channel)
-}
-
-export function subscribeToDuas(onChange) {
-  if (!isSupabaseConfigured) return () => {}
-  const channel = supabase
-    .channel('duas_changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: DUAS_TABLE }, () => onChange())
     .subscribe()
   return () => supabase.removeChannel(channel)
 }

@@ -10,9 +10,9 @@ export function Dashboard({ data }) {
     { label: 'Story Events', value: d.story?.length || 0 },
     { label: 'Party Members', value: d.party?.length || 0 },
     { label: 'Gallery Photos', value: d.gallery?.length || 0 },
-    { label: 'Blessings', value: d.duas?.length || 0 }
+    { label: 'Blessings', value: d.blessings?.length || 0 }
   ]
-  const recent = [...(d.duas || [])].slice(-3).reverse()
+  const recent = [...(d.blessings || [])].slice(-3).reverse()
 
   return (
     <>

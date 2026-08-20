@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import Reveal from '../common/Reveal.jsx'
 import SectionHeading from './SectionHeading.jsx'
 import { useRipple } from '../common/useRipple.js'
-import { addDua, getDuas } from '../../lib/data.js'
+import { addBlessing, getBlessings } from '../../lib/data.js'
 
 export default function Dua() {
   const ripple = useRipple()
@@ -12,15 +12,15 @@ export default function Dua() {
   const [duas, setDuas] = useState([])
 
   useEffect(() => {
-    getDuas().then(setDuas).catch(() => {})
+    getBlessings().then(setDuas).catch(() => {})
   }, [])
 
   const submit = async (e) => {
     e.preventDefault()
     if (!name.trim() || !text.trim()) return
-    const dua = { name: name.trim(), text: text.trim(), date: new Date().toLocaleDateString() }
+    const dua = { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, name: name.trim(), text: text.trim(), date: new Date().toLocaleDateString() }
     try {
-      await addDua(dua)
+      await addBlessing(dua)
     } catch (err) {
       console.error('[Dua] submit failed', err)
     }

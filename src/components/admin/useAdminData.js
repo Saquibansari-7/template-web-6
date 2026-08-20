@@ -3,10 +3,7 @@ import {
   getContent,
   saveContent,
   resetContent,
-  getDuas,
-  deleteDua,
   subscribeToContent,
-  subscribeToDuas,
 } from '../../lib/data.js'
 import { toast } from '../../lib/toast.js'
 
@@ -38,31 +35,26 @@ export function useAdminData() {
     })
   }, [])
 
+  const addBlessing = useCallback((blessing) => {
+    update((prev) => ({
+      ...prev,
+      blessings: [blessing, ...(prev.blessings || [])],
+    }))
+  }, [update])
+
+  const removeBlessing = useCallback((id) => {
+    update((prev) => ({
+      ...prev,
+      blessings: (prev.blessings || []).filter((b) => b.id !== id),
+    }))
+  }, [update])
+
   const doReset = useCallback(async () => {
     const fresh = await resetContent()
     setData(fresh)
   }, [])
 
-  return { data, update, reset: doReset }
-}
+  const blessings = data?.blessings || []
 
-export function useDuasState() {
-  const [duas, setDuas] = useState([])
-
-  const reload = useCallback(() => {
-    getDuas().then(setDuas).catch(() => setDuas([]))
-  }, [])
-
-  useEffect(() => {
-    reload()
-    const off = subscribeToDuas(reload)
-    return off
-  }, [reload])
-
-  const remove = useCallback(async (id) => {
-    await deleteDua(id)
-    setDuas((prev) => prev.filter((d) => d.id !== id))
-  }, [])
-
-  return { duas, reload, remove }
+  return { data, update, addBlessing, removeBlessing, blessings, reset: doReset }
 }

@@ -262,32 +262,54 @@ export function Sections({ data, update }) {
 /* ---------------- Gallery ---------------- */
 export function Gallery({ data, update }) {
   const gallery = data.gallery || []
-  const upload = () => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = 'image/*'
-    input.onchange = async () => {
-      const file = input.files && input.files[0]
-      if (!file) return
-      try {
-        const url = await uploadImage(file)
-        const caption = prompt('Caption (optional)') || file.name.replace(/\.[^/.]+$/, '')
-        update((prev) => ({ ...prev, gallery: [...prev.gallery, { url, caption }] }))
-        toast('Image uploaded')
-      } catch (err) {
-        toast(err.message || 'Upload failed')
-      }
-    }
-    input.click()
+  const [file, setFile] = useState(null)
+  const [caption, setCaption] = useState('')
+  const [uploading, setUploading] = useState(false)
+
+  const onPick = (e) => {
+    const f = e.target.files && e.target.files[0]
+    setFile(f || null)
+    setCaption(f ? f.name.replace(/\.[^/.]+$/, '') : '')
   }
+
+  const doUpload = async () => {
+    if (!file) return
+    setUploading(true)
+    try {
+      const url = await uploadImage(file)
+      update((prev) => ({ ...prev, gallery: [...prev.gallery, { url, caption: caption.trim() }] }))
+      toast('Image uploaded')
+      setFile(null)
+      setCaption('')
+    } catch (err) {
+      toast(err.message || 'Upload failed')
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const remove = (i) => {
     update((prev) => ({ ...prev, gallery: prev.gallery.filter((_, j) => j !== i) }))
     toast('Image deleted')
   }
+
   return (
     <>
-      <div className="content-header"><h1>Photo Gallery</h1><button className="btn btn-primary" onClick={upload}>+ Upload Photo</button></div>
+      <div className="content-header"><h1>Photo Gallery</h1></div>
       <div className="card">
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <input type="file" accept="image/*" onChange={onPick} style={{ color: 'var(--ivory)', fontSize: '0.85rem' }} />
+          <input
+            type="text"
+            placeholder="Caption (optional)"
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            style={{ flex: '1 1 200px', padding: '0.6rem 0.8rem', background: 'rgba(245,240,232,0.05)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 8, color: 'var(--ivory)' }}
+          />
+          <button className="btn btn-primary" onClick={doUpload} disabled={!file || uploading}>
+            {uploading ? 'Uploading…' : 'Upload Photo'}
+          </button>
+        </div>
         <div className="gallery-grid-admin">
           {gallery.map((item, i) => (
             <div className="gallery-item-admin" key={i}>
@@ -319,7 +341,7 @@ export function Duas({ duas, remove }) {
             {duas.length ? duas.map((d, i) => (
               <tr key={i}>
                 <td>{d.name}</td><td>{d.text?.substring(0, 50)}...</td><td>{d.date}</td>
-                <td><button className="btn btn-danger btn-sm" onClick={() => remove(i)}>Delete</button></td>
+                <td><button className="btn btn-danger btn-sm" onClick={() => remove(d.id)}>Delete</button></td>
               </tr>
             )) : (
               <tr><td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: 'rgba(245,240,232,0.5)' }}>No blessings</td></tr>

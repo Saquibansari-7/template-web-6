@@ -41,12 +41,13 @@ export const DEFAULT_CONTENT = {
     { name: 'Layla', role: 'Bridesmaid' },
     { name: 'Ibrahim', role: 'Usher' },
   ],
-  guidelines: [
+    guidelines: [
     { title: 'Separate Seating', description: 'A prayer-conscious gathering with separate seating for brothers and sisters.' },
     { title: 'Halal Only', description: 'All food and refreshments served will be 100% halal.' },
     { title: 'Nasheed Only', description: 'Entertainment will be modest — no podcasts, only nasheeds and reminders.' },
     { title: 'Photography', description: 'Photos are welcome! Please keep them respectful and modest.' },
   ],
+  blessings: [],
   gallery: [
     { url: '', caption: 'Our first meeting' },
     { url: '', caption: 'A walk by the Bosphorus' },
