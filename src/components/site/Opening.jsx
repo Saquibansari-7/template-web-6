@@ -18,6 +18,7 @@ export default function Opening() {
   const start = () => {
     if (opened) return
     setOpened(true)
+    window.dispatchEvent(new Event('music:start'))
     setTimeout(() => setClosing(true), 2200)
     setTimeout(() => {
       setHidden(true)

@@ -1,5 +1,6 @@
 import Lanterns from './Lanterns.jsx'
 import ParticleCanvas from '../common/ParticleCanvas.jsx'
+import MusicDisk from './MusicDisk.jsx'
 
 export default function Hero({ settings }) {
   const names = settings ? `${settings.groom} & ${settings.bride}` : 'Ahmad & Zara'
@@ -20,6 +21,8 @@ export default function Hero({ settings }) {
       <div className="parallax-bg" id="parallax-bg" />
       <ParticleCanvas />
       <Lanterns />
+
+      <MusicDisk />
 
       <div className="hero-content">
         <div className="reveal" style={{ marginBottom: '2rem' }}>
