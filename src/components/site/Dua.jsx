@@ -12,7 +12,10 @@ export default function Dua() {
   const [duas, setDuas] = useState([])
 
   useEffect(() => {
-    getBlessings().then(setDuas).catch(() => {})
+    const params = new URLSearchParams(window.location.search)
+    const customer = params.get('customer')
+    const siteId = customer && customer.trim() ? customer.trim() : undefined
+    getBlessings(siteId).then(setDuas).catch(() => {})
   }, [])
 
   const submit = async (e) => {
@@ -20,7 +23,10 @@ export default function Dua() {
     if (!name.trim() || !text.trim()) return
     const dua = { id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, name: name.trim(), text: text.trim(), date: new Date().toLocaleDateString() }
     try {
-      await addBlessing(dua)
+      const params = new URLSearchParams(window.location.search)
+      const customer = params.get('customer')
+      const siteId = customer && customer.trim() ? customer.trim() : undefined
+      await addBlessing(dua, siteId)
     } catch (err) {
       console.error('[Dua] submit failed', err)
     }

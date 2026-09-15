@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured, CONTENT_TABLE, BUCKET, SITE_ID } from './supabase.js'
+import { resolveSite } from './siteResolver.js'
 
 export { isSupabaseConfigured }
 import { DEFAULT_CONTENT } from './defaults.js'
@@ -24,7 +25,25 @@ function normalizeContent(raw) {
   }
 }
 
-export async function getContent() {
+async function getContentFromSites(siteId) {
+  if (!isSupabaseConfigured) return structuredClone(DEFAULT_CONTENT)
+  const { data, error } = await supabase
+    .from('sites')
+    .select('data')
+    .eq('subdomain', siteId)
+    .single()
+
+  if (error && error.code !== 'PGRST116') {
+    console.error('[getContentFromSites] Supabase error:', error)
+    return structuredClone(DEFAULT_CONTENT)
+  }
+  return normalizeContent(data?.data)
+}
+
+export async function getContent(siteId) {
+  if (siteId && siteId !== SITE_ID) {
+    return getContentFromSites(siteId)
+  }
   if (!isSupabaseConfigured) {
     return structuredClone(DEFAULT_CONTENT)
   }
@@ -41,7 +60,10 @@ export async function getContent() {
   return normalizeContent(data?.data)
 }
 
-export async function saveContent(content) {
+export async function saveContent(content, siteId) {
+  if (siteId && siteId !== SITE_ID) {
+    return saveContentToSite(siteId, content)
+  }
   if (!isSupabaseConfigured) {
     throw new Error(NOT_CONFIGURED_MESSAGE)
   }
@@ -58,45 +80,82 @@ export async function saveContent(content) {
   return content
 }
 
-export async function resetContent() {
-  return saveContent(structuredClone(DEFAULT_CONTENT))
+export async function resetContent(siteId) {
+  return saveContent(structuredClone(DEFAULT_CONTENT), siteId)
 }
 
-/* ---------------- Blessings (stored inside site_content) ---------------- */
+/* ---------------- Customer site resolution ---------------- */
 
-export async function getBlessings() {
+export async function loadContentByCustomer(customer) {
+  const url = import.meta.env.VITE_PUBLIC_SUPABASE_URL?.trim()
+  const key = import.meta.env.VITE_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim()
+  if (!url || !key) return null
+
+  const site = await resolveSite(customer, url, key)
+  if (!site || !site.data) return null
+
+  const content = normalizeContent(site.data)
+  return { site, content }
+}
+
+export async function saveContentToSite(siteId, content) {
+  const url = import.meta.env.VITE_PUBLIC_SUPABASE_URL?.trim()
+  const key = import.meta.env.VITE_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim()
+  if (!url || !key) throw new Error('Supabase not configured')
+
+  const res = await fetch(
+    `${url}/rest/v1/sites?subdomain=eq.${encodeURIComponent(siteId)}`,
+    {
+      method: 'PATCH',
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify({ data: content, updated_at: new Date().toISOString() }),
+    }
+  )
+
+  if (!res.ok) throw new Error(`[saveContentToSite] HTTP ${res.status}`)
+  return content
+}
+
+/* ---------------- Blessings (stored inside site_content / sites.data) ---------------- */
+
+export async function getBlessings(siteId) {
   try {
-    const content = await getContent()
+    const content = await getContent(siteId)
     return Array.isArray(content.blessings) ? content.blessings : []
   } catch {
     return []
   }
 }
 
-export async function addBlessing(blessing) {
-  const content = await getContent()
+export async function addBlessing(blessing, siteId) {
+  const content = await getContent(siteId)
   const blessings = Array.isArray(content.blessings) ? content.blessings : []
   const next = [blessing, ...blessings]
-  await saveContent({ ...content, blessings: next })
+  await saveContent({ ...content, blessings: next }, siteId)
   return blessing
 }
 
-export async function deleteBlessing(id) {
-  const content = await getContent()
+export async function deleteBlessing(id, siteId) {
+  const content = await getContent(siteId)
   const blessings = Array.isArray(content.blessings) ? content.blessings : []
   const next = blessings.filter((b) => (b.id ?? `${b.name}-${b.text}`) !== id)
-  await saveContent({ ...content, blessings: next })
+  await saveContent({ ...content, blessings: next }, siteId)
 }
 
 /* ---------------- Image upload ---------------- */
 
-export async function uploadImage(file) {
+export async function uploadImage(file, siteId) {
   if (!isSupabaseConfigured) {
     throw new Error(NOT_CONFIGURED_MESSAGE)
   }
   const fileExt = (file.name.split('.').pop() || 'bin').toLowerCase()
   const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${fileExt}`
-  const filePath = `${SITE_ID}/${fileName}`
+  const filePath = `${siteId}/${fileName}`
 
   const { error } = await supabase.storage
     .from(BUCKET)
@@ -117,13 +176,13 @@ export async function uploadImage(file) {
 
 /* ---------------- Realtime sync ---------------- */
 
-export function subscribeToContent(onChange) {
+export function subscribeToContent(onChange, filter = `site_id=eq.${SITE_ID}`, table = CONTENT_TABLE) {
   if (!isSupabaseConfigured) return () => {}
   const channel = supabase
     .channel('site_content_changes')
     .on(
       'postgres_changes',
-      { event: '*', schema: 'public', table: CONTENT_TABLE, filter: `site_id=eq.${SITE_ID}` },
+      { event: '*', schema: 'public', table, filter },
       () => onChange()
     )
     .subscribe()

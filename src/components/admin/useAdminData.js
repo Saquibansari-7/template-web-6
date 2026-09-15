@@ -1,39 +1,100 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import {
   getContent,
   saveContent,
-  resetContent,
+  loadContentByCustomer,
+  saveContentToSite,
   subscribeToContent,
 } from '../../lib/data.js'
+import { DEFAULT_CONTENT } from '../../lib/defaults.js'
 import { toast } from '../../lib/toast.js'
 
 export function useAdminData() {
   const [data, setData] = useState(null)
+  const [site, setSite] = useState(null)
+  const siteRef = useRef(site)
+
+  useEffect(() => {
+    siteRef.current = site
+  }, [site])
 
   const reload = useCallback(async () => {
-    const content = await getContent()
+    const content = await getContent(siteRef.current?.id)
     setData(content)
   }, [])
 
   useEffect(() => {
-    reload().catch((err) => console.error('[useAdminData]', err))
+    let active = true
+    let unsubscribe = () => {}
 
-    const offContent = subscribeToContent(() => reload().catch(() => {}))
-    const offReset = () => window.dispatchEvent(new Event('admin-reset-event'))
-    window.addEventListener('admin-reset-event', reload)
+    const init = async () => {
+      try {
+        const params = new URLSearchParams(window.location.search)
+        const customer = params.get('customer')
+
+        let resolvedSite = null
+        let content = null
+
+        if (customer && customer.trim()) {
+          const result = await loadContentByCustomer(customer.trim())
+          if (result) {
+            resolvedSite = result.site
+            content = result.content
+          } else if (active) {
+            console.warn('[useAdminData] customer not found, loading default')
+            content = await getContent()
+          }
+        } else {
+          content = await getContent()
+        }
+
+        if (active) {
+          setData(content)
+          setSite(resolvedSite)
+
+          const filter = resolvedSite
+            ? `subdomain=eq.${encodeURIComponent(resolvedSite.subdomain)}`
+            : undefined
+          const table = resolvedSite ? 'sites' : undefined
+
+          unsubscribe = subscribeToContent(
+            () => {
+              getContent(siteRef.current?.subdomain)
+                .then((c) => active && setData(c))
+                .catch(() => {})
+            },
+            filter,
+            table
+          )
+        }
+      } catch (err) {
+        console.error('[useAdminData]', err)
+      }
+    }
+
+    init()
+
+    const handleReset = () => reload().catch(() => {})
+    window.addEventListener('admin-reset-event', handleReset)
+
     return () => {
-      offContent()
-      window.removeEventListener('admin-reset-event', reload)
+      active = false
+      unsubscribe()
+      window.removeEventListener('admin-reset-event', handleReset)
     }
   }, [reload])
 
   const update = useCallback(async (mutator) => {
     setData((prev) => {
       const next = typeof mutator === 'function' ? mutator(prev) : { ...prev, ...mutator }
-      saveContent(next).catch((err) => toast(err.message || 'Save failed'))
+      if (site) {
+        saveContentToSite(site.id, next).catch((err) => toast(err.message || 'Save failed'))
+      } else {
+        saveContent(next).catch((err) => toast(err.message || 'Save failed'))
+      }
       return next
     })
-  }, [])
+  }, [site])
 
   const addBlessing = useCallback((blessing) => {
     update((prev) => ({
@@ -50,11 +111,16 @@ export function useAdminData() {
   }, [update])
 
   const doReset = useCallback(async () => {
-    const fresh = await resetContent()
-    setData(fresh)
-  }, [])
+    if (site) {
+      const fresh = await saveContentToSite(site.id, structuredClone(DEFAULT_CONTENT))
+      setData(fresh)
+    } else {
+      const fresh = await resetContent()
+      setData(fresh)
+    }
+  }, [site])
 
   const blessings = data?.blessings || []
 
-  return { data, update, addBlessing, removeBlessing, blessings, reset: doReset }
+  return { data, site, update, addBlessing, removeBlessing, blessings, reset: doReset }
 }

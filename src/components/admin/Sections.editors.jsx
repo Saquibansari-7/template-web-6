@@ -260,7 +260,7 @@ export function Sections({ data, update }) {
 }
 
 /* ---------------- Gallery ---------------- */
-export function Gallery({ data, update }) {
+export function Gallery({ data, update, site }) {
   const gallery = data.gallery || []
   const [file, setFile] = useState(null)
   const [caption, setCaption] = useState('')
@@ -276,7 +276,7 @@ export function Gallery({ data, update }) {
     if (!file) return
     setUploading(true)
     try {
-      const url = await uploadImage(file)
+      const url = await uploadImage(file, site ? site.id : undefined)
       update((prev) => ({ ...prev, gallery: [...prev.gallery, { url, caption: caption.trim() }] }))
       toast('Image uploaded')
       setFile(null)

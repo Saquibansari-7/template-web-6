@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getContent, subscribeToContent } from './data.js'
+import { getContent, loadContentByCustomer, subscribeToContent } from './data.js'
 
 export function useWeddingData() {
   const [data, setData] = useState(null)
@@ -7,24 +7,51 @@ export function useWeddingData() {
 
   useEffect(() => {
     let active = true
+    let unsubscribe = () => {}
+    let currentSiteId
 
-    getContent()
-      .then((content) => {
+    const params = new URLSearchParams(window.location.search)
+    const customer = params.get('customer')
+    const isCustomer = Boolean(customer && customer.trim())
+
+    const load = async () => {
+      try {
+        let content
+        if (isCustomer) {
+          const result = await loadContentByCustomer(customer.trim())
+          if (result) {
+            content = result.content
+            currentSiteId = result.site.id
+          } else {
+            console.warn('[useWeddingData] customer not found, using default site')
+            content = await getContent()
+          }
+        } else {
+          content = await getContent()
+        }
         if (active) setData(content)
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error('[useWeddingData]', err)
         if (active) setData(null)
-      })
-      .finally(() => {
+      } finally {
         if (active) setLoading(false)
-      })
+      }
+    }
 
-    const unsubscribe = subscribeToContent(() => {
-      getContent()
-        .then((content) => active && setData(content))
-        .catch(() => {})
-    })
+    load()
+
+    const table = isCustomer ? 'sites' : undefined
+    const filter = isCustomer ? `subdomain=eq.${encodeURIComponent(customer.trim())}` : undefined
+
+    unsubscribe = subscribeToContent(
+      () => {
+        getContent(currentSiteId)
+          .then((content) => active && setData(content))
+          .catch(() => {})
+      },
+      filter,
+      table
+    )
 
     return () => {
       active = false

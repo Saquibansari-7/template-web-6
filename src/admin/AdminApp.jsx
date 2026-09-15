@@ -10,7 +10,7 @@ import {
 export default function AdminApp() {
   const [auth, setAuth] = useState(isLoggedIn())
   const [active, setActive] = useState('dashboard')
-  const { data, update, blessings, removeBlessing } = useAdminData()
+  const { data, site, update, blessings, removeBlessing } = useAdminData()
 
   if (!auth) return <Login onSuccess={() => setAuth(true)} />
   if (!data) return <div className="login-container" />
@@ -25,7 +25,7 @@ export default function AdminApp() {
       case 'party': return <Party data={data} update={update} />
       case 'guidelines': return <Guidelines data={data} update={update} />
       case 'sections': return <Sections data={data} update={update} />
-      case 'gallery': return <Gallery data={data} update={update} />
+      case 'gallery': return <Gallery data={data} update={update} site={site} />
       case 'duas': return <Duas duas={blessings} remove={removeBlessing} />
       default: return <Dashboard data={data} />
     }
