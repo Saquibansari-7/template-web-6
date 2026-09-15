@@ -276,7 +276,7 @@ export function Gallery({ data, update, site }) {
     if (!file) return
     setUploading(true)
     try {
-      const url = await uploadImage(file, site ? site.id : undefined)
+      const url = await uploadImage(file, site ? site.subdomain : undefined)
       update((prev) => ({ ...prev, gallery: [...prev.gallery, { url, caption: caption.trim() }] }))
       toast('Image uploaded')
       setFile(null)

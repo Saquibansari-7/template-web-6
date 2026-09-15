@@ -19,7 +19,7 @@ export function useAdminData() {
   }, [site])
 
   const reload = useCallback(async () => {
-    const content = await getContent(siteRef.current?.id)
+    const content = await getContent(siteRef.current?.subdomain)
     setData(content)
   }, [])
 
@@ -88,7 +88,7 @@ export function useAdminData() {
     setData((prev) => {
       const next = typeof mutator === 'function' ? mutator(prev) : { ...prev, ...mutator }
       if (site) {
-        saveContentToSite(site.id, next).catch((err) => toast(err.message || 'Save failed'))
+        saveContentToSite(site.subdomain, next).catch((err) => toast(err.message || 'Save failed'))
       } else {
         saveContent(next).catch((err) => toast(err.message || 'Save failed'))
       }
@@ -112,7 +112,7 @@ export function useAdminData() {
 
   const doReset = useCallback(async () => {
     if (site) {
-      const fresh = await saveContentToSite(site.id, structuredClone(DEFAULT_CONTENT))
+      const fresh = await saveContentToSite(site.subdomain, structuredClone(DEFAULT_CONTENT))
       setData(fresh)
     } else {
       const fresh = await resetContent()

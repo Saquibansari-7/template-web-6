@@ -21,7 +21,7 @@ export function useWeddingData() {
           const result = await loadContentByCustomer(customer.trim())
           if (result) {
             content = result.content
-            currentSiteId = result.site.id
+            currentSiteId = result.site.subdomain
           } else {
             console.warn('[useWeddingData] customer not found, using default site')
             content = await getContent()
