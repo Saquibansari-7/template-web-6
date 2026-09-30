@@ -15,6 +15,7 @@ import Footer from './components/site/Footer.jsx'
 
 export default function App() {
   const { data, loading, notFound } = useWeddingData()
+  useGlobalReveal(data)
 
   if (loading) {
     return <div style={{ minHeight: '100vh', background: 'var(--midnight)' }} />
@@ -32,8 +33,6 @@ export default function App() {
   if (!data) {
     return <div style={{ minHeight: '100vh', background: 'var(--midnight)' }} />
   }
-
-  useGlobalReveal(data)
 
   const s = data.sections || {}
   const visible = (key) => s[key] !== false
