@@ -21,6 +21,10 @@ export async function resolveSite(customerSubdomain) {
       console.warn('[siteResolver] empty site data for:', subdomain)
       return null
     }
+    if ((site.subdomain || '').toLowerCase() !== subdomain) {
+      console.warn('[siteResolver] rejected partial/non-exact match for:', subdomain, 'got:', site.subdomain)
+      return null
+    }
     console.log('[siteResolver] loaded site:', subdomain)
     return site
   } catch (err) {
