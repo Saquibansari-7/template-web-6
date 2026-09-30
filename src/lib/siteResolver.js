@@ -1,34 +1,28 @@
-export async function resolveSite(customerSubdomain, supabaseUrl, supabaseKey) {
+const API_URL = 'https://weddappvows.vercel.app/api/site/lookup'
+const SUBDOMAIN_REGEX = /^[a-z0-9](?:[a-z0-9-]{0,58}[a-z0-9])?$/
+
+export async function resolveSite(customerSubdomain) {
   let subdomain = (customerSubdomain || '').trim().toLowerCase()
   if (!subdomain) return null
 
-  subdomain = subdomain.replace(/\/+$/, '')
-
-  const url = supabaseUrl.trim()
-  const key = supabaseKey.trim()
-  if (!url || !key) return null
-
-  const safe = subdomain.replace(/[^a-zA-Z0-9_-]/g, '')
-  if (safe !== subdomain) {
-    console.warn('[siteResolver] stripped invalid chars from subdomain:', subdomain, '→', safe)
-    subdomain = safe
+  if (!SUBDOMAIN_REGEX.test(subdomain)) {
+    console.warn('[siteResolver] invalid subdomain format:', customerSubdomain)
+    return null
   }
-  if (!subdomain) return null
 
   try {
-    const res = await fetch(
-      `${url}/rest/v1/sites?subdomain=eq.${encodeURIComponent(subdomain)}&select=*&limit=1`,
-      { headers: { apikey: key, Authorization: `Bearer ${key}` } },
-    )
-
+    const res = await fetch(`${API_URL}?customer=${encodeURIComponent(subdomain)}`)
     if (!res.ok) {
-      console.error('[siteResolver] HTTP', res.status, await res.text().catch(() => ''))
+      console.warn('[siteResolver] site not found or inactive:', subdomain, 'status:', res.status)
       return null
     }
-
-    const rows = await res.json()
-    console.log('[siteResolver] rows returned:', rows.length, 'for', subdomain)
-    return rows[0] ?? null
+    const site = await res.json()
+    if (!site || !site.data) {
+      console.warn('[siteResolver] empty site data for:', subdomain)
+      return null
+    }
+    console.log('[siteResolver] loaded site:', subdomain)
+    return site
   } catch (err) {
     console.error('[siteResolver] fetch failed:', err)
     return null

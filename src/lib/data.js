@@ -87,11 +87,8 @@ export async function resetContent(siteId) {
 /* ---------------- Customer site resolution ---------------- */
 
 export async function loadContentByCustomer(customer) {
-  const url = import.meta.env.VITE_PUBLIC_SUPABASE_URL?.trim()
-  const key = import.meta.env.VITE_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim()
-  if (!url || !key) return null
-
-  const site = await resolveSite(customer, url, key)
+  const { resolveSite } = await import('./siteResolver.js')
+  const site = await resolveSite(customer)
   if (!site || !site.data) return null
 
   const content = normalizeContent(site.data)

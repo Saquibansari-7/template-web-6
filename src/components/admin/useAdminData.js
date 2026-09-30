@@ -12,6 +12,7 @@ import { toast } from '../../lib/toast.js'
 export function useAdminData() {
   const [data, setData] = useState(null)
   const [site, setSite] = useState(null)
+  const [notFound, setNotFound] = useState(false)
   const siteRef = useRef(site)
 
   useEffect(() => {
@@ -41,8 +42,9 @@ export function useAdminData() {
             resolvedSite = result.site
             content = result.content
           } else if (active) {
-            console.warn('[useAdminData] customer not found, loading default')
-            content = await getContent()
+            setNotFound(true)
+            setData(null)
+            setSite(null)
           }
         } else {
           content = await getContent()
@@ -122,5 +124,5 @@ export function useAdminData() {
 
   const blessings = data?.blessings || []
 
-  return { data, site, update, addBlessing, removeBlessing, blessings, reset: doReset }
+  return { data, site, notFound, update, addBlessing, removeBlessing, blessings, reset: doReset }
 }

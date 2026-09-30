@@ -10,9 +10,17 @@ import {
 export default function AdminApp() {
   const [auth, setAuth] = useState(isLoggedIn())
   const [active, setActive] = useState('dashboard')
-  const { data, site, update, blessings, removeBlessing } = useAdminData()
+  const { data, site, notFound, update, blessings, removeBlessing } = useAdminData()
 
   if (!auth) return <Login onSuccess={() => setAuth(true)} />
+  if (notFound) {
+    return (
+      <div className="login-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', gap: '1rem' }}>
+        <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '3rem', color: 'var(--gold)' }}>404</h1>
+        <p style={{ color: 'rgba(245,240,232,0.7)' }}>Site not found.</p>
+      </div>
+    )
+  }
   if (!data) return <div className="login-container" />
 
   const render = () => {
