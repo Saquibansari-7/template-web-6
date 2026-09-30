@@ -71,6 +71,11 @@ export function useAdminData() {
         }
       } catch (err) {
         console.error('[useAdminData]', err)
+        if (customer && customer.trim() && active) {
+          setNotFound(true)
+          setData(null)
+          setSite(null)
+        }
       }
     }
 
