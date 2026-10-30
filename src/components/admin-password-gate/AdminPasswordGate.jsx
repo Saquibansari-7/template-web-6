@@ -131,13 +131,15 @@ export default function AdminPasswordGate({ customer, children }) {
               </button>
             </div>
 
-            <input
-              type={showPwd ? 'text' : 'password'}
-              placeholder="Confirm password"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              autoComplete="new-password"
-            />
+            <div className={styles.field}>
+              <input
+                type={showPwd ? 'text' : 'password'}
+                placeholder="Confirm password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                autoComplete="new-password"
+              />
+            </div>
 
             {master && (
               <p className={styles.hint}>
@@ -175,7 +177,7 @@ export default function AdminPasswordGate({ customer, children }) {
 
               <button
                 type="submit"
-                className="btn btn-primary"
+                className={styles.btnPrimary}
                 disabled={loading}
               >
                 {loading ? 'Checking…' : 'Sign In'}
@@ -196,7 +198,7 @@ export default function AdminPasswordGate({ customer, children }) {
         {step === 'set' && (
           <button
             type="button"
-            className="btn btn-primary"
+            className={styles.btnPrimary}
             onClick={savePassword}
           >
             Set Password
