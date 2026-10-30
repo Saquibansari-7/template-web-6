@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { isLoggedIn, logout } from '../lib/data.js'
 import { useAdminData } from '../components/admin/useAdminData.js'
+import AdminPasswordGate from '../components/admin-password-gate/AdminPasswordGate'
 import AdminShell from '../components/admin/AdminShell.jsx'
 import Login from '../components/admin/Login.jsx'
 import {
@@ -12,7 +13,10 @@ export default function AdminApp() {
   const [active, setActive] = useState('dashboard')
   const { data, site, notFound, update, blessings, removeBlessing } = useAdminData()
 
-  if (!auth) return <Login onSuccess={() => setAuth(true)} />
+  const customer = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('customer')
+    : null
+
   if (notFound) {
     return (
       <div className="login-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', gap: '1rem' }}>
@@ -21,7 +25,6 @@ export default function AdminApp() {
       </div>
     )
   }
-  if (!data) return <div className="login-container" />
 
   const render = () => {
     switch (active) {
@@ -39,9 +42,24 @@ export default function AdminApp() {
     }
   }
 
-  return (
-    <AdminShell active={active} onNavigate={setActive} onLogout={() => { logout(); setAuth(false) }}>
+  const adminPanel = (
+    <AdminShell active={active} onNavigate={setActive} onLogout={() => { logout() }}>
       {render()}
     </AdminShell>
   )
+
+  // Customer-scoped admin: use the reusable password gate
+  if (customer) {
+    return (
+      <AdminPasswordGate customer={customer}>
+        {adminPanel}
+      </AdminPasswordGate>
+    )
+  }
+
+  // Fallback: legacy login flow for non-customer admin access
+  if (!auth) return <Login onSuccess={() => setAuth(true)} />
+  if (!data) return <div className="login-container" />
+
+  return adminPanel
 }
