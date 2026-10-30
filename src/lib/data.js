@@ -146,7 +146,12 @@ export async function deleteBlessing(id, siteId) {
 
 /* ---------------- Image upload ---------------- */
 
+export const MAX_IMAGE_UPLOAD_BYTES = 5 * 1024 * 1024
+
 export async function uploadImage(file, siteId) {
+  if (file.size > MAX_IMAGE_UPLOAD_BYTES) {
+    throw new Error('Images must be 5 MB or smaller')
+  }
   if (!isSupabaseConfigured) {
     throw new Error(NOT_CONFIGURED_MESSAGE)
   }

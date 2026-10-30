@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { toast, Dashboard, Settings } from './Sections.jsx'
 import { googleMapsEmbed } from '../../lib/utils.js'
-import { uploadImage } from '../../lib/data.js'
+import { MAX_IMAGE_UPLOAD_BYTES, uploadImage } from '../../lib/data.js'
 
 export { Dashboard, Settings }
 
@@ -262,12 +262,20 @@ export function Sections({ data, update }) {
 /* ---------------- Gallery ---------------- */
 export function Gallery({ data, update, site }) {
   const gallery = data.gallery || []
+  const fileInputRef = useRef(null)
   const [file, setFile] = useState(null)
   const [caption, setCaption] = useState('')
   const [uploading, setUploading] = useState(false)
 
   const onPick = (e) => {
     const f = e.target.files && e.target.files[0]
+    if (f && f.size > MAX_IMAGE_UPLOAD_BYTES) {
+      setFile(null)
+      setCaption('')
+      e.target.value = ''
+      toast('Images must be 5 MB or smaller')
+      return
+    }
     setFile(f || null)
     setCaption(f ? f.name.replace(/\.[^/.]+$/, '') : '')
   }
@@ -281,6 +289,7 @@ export function Gallery({ data, update, site }) {
       toast('Image uploaded')
       setFile(null)
       setCaption('')
+      if (fileInputRef.current) fileInputRef.current.value = ''
     } catch (err) {
       toast(err.message || 'Upload failed')
     } finally {
@@ -297,8 +306,19 @@ export function Gallery({ data, update, site }) {
     <>
       <div className="content-header"><h1>Photo Gallery</h1></div>
       <div className="card">
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <input type="file" accept="image/*" onChange={onPick} style={{ color: 'var(--ivory)', fontSize: '0.85rem' }} />
+        <div className="gallery-upload-controls">
+          <input
+            ref={fileInputRef}
+            className="gallery-file-input"
+            type="file"
+            accept="image/*"
+            aria-label="Choose an image"
+            onChange={onPick}
+          />
+          <button type="button" className="gallery-choose-file" onClick={() => fileInputRef.current?.click()}>
+            Choose image
+          </button>
+          <span className="gallery-file-name">{file ? file.name : 'No image selected'}</span>
           <input
             type="text"
             placeholder="Caption (optional)"

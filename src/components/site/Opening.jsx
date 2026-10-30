@@ -31,8 +31,8 @@ export default function Opening() {
 
   return (
     <div className={`opening ${opened ? 'is-open' : ''} ${closing ? 'is-closing' : ''}`} aria-hidden={opened}>
-      <img src="/opening/left-gate.png" className="opening-gate opening-gate--left" alt="" />
-      <img src="/opening/right-gate.png" className="opening-gate opening-gate--right" alt="" />
+      <img src="/opening/left-gate.webp" className="opening-gate opening-gate--left" alt="" />
+      <img src="/opening/right-gate.webp" className="opening-gate opening-gate--right" alt="" />
 
       <button
         ref={sealRef}
@@ -40,7 +40,7 @@ export default function Opening() {
         onClick={start}
         aria-label="Open the invitation"
       >
-        <img src="/opening/m-stamp.png" alt="Seal" />
+        <img src="/opening/m-stamp.webp" alt="Seal" />
       </button>
     </div>
   )

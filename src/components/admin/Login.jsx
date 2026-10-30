@@ -28,7 +28,7 @@ export default function Login({ onSuccess }) {
             onKeyDown={(e) => { if (e.key === 'Enter') submit(e) }}
           />
           <button type="submit">Sign In</button>
-          {error && <p className="login-error" style={{ display: 'block' }}>Incorrect password. <strong>admin123</strong></p>}
+          {error && <p className="login-error" style={{ display: 'block' }}>Incorrect password.</p>}
         </form>
       </div>
     </div>
