@@ -43,7 +43,7 @@ export default function AdminApp() {
   }
 
   const adminPanel = (
-    <AdminShell active={active} onNavigate={setActive} onLogout={() => { logout(); setAuth(false) }}>
+    <AdminShell active={active} onNavigate={setActive} onLogout={() => { logout(); setAuth(false) }} customer={customer}>
       {render()}
     </AdminShell>
   )

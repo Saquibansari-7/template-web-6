@@ -13,13 +13,17 @@ const NAV = [
   { key: 'duas', label: 'Blessings (Du\'as)' }
 ]
 
-export default function AdminShell({ onLogout, children, active, onNavigate }) {
+export default function AdminShell({ onLogout, children, active, onNavigate, customer }) {
   const [open, setOpen] = useState(false)
 
   const go = (key) => {
     onNavigate(key)
     setOpen(false)
   }
+
+  const viewSiteHref = customer
+    ? `/?customer=${encodeURIComponent(customer)}`
+    : '/'
 
   return (
     <div className="admin-layout">
@@ -44,9 +48,18 @@ export default function AdminShell({ onLogout, children, active, onNavigate }) {
             {n.label}
           </div>
         ))}
-        <div style={{ padding: '1.5rem', marginTop: '2rem' }}>
-          <button onClick={resetData} className="btn btn-danger" style={{ width: '100%', marginTop: '0.75rem' }}>Reset to Defaults</button>
-          <button onClick={onLogout} className="btn btn-danger" style={{ width: '100%', marginTop: '1rem' }}>Logout</button>
+        <div className="sidebar-footer">
+          <a
+            href={viewSiteHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-secondary"
+            style={{ width: '100%', marginBottom: '0.75rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            View Site ↗
+          </a>
+          <button onClick={resetData} className="btn btn-danger" style={{ width: '100%' }}>Reset to Defaults</button>
+          <button onClick={onLogout} className="btn btn-danger" style={{ width: '100%', marginTop: '0.75rem' }}>Logout</button>
         </div>
       </nav>
 
